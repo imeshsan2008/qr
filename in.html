@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venom Devil - QR Generator</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #e63946;
+            --dark-bg: #0d0d0d;
+            --light-text: #ffffff;
+        }
+
+        body {
+            background: var(--dark-bg);
+            font-family: Arial, sans-serif;
+        }
+
+        .qr-wrapper {
+            max-width: 650px;
+            margin: 50px auto;
+            background: #181818;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 0 20px #00000066;
+        }
+
+        .qr-title {
+            text-align: center;
+            font-weight: 800;
+            color: var(--light-text);
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            color: #bbb;
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            background: #000;
+        }
+
+        .input-label {
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        .btn-main:hover {
+            background: #d7313e;
+        }
+
+        /* Loading Spinner */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            border: 5px solid #ffffff22;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .logo-select {
+            width: 90px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .logo-select:hover {
+            transform: scale(1.05);
+        }
+
+        #qr-output img {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 10px;
+        }   .footer {
+      text-align: center;
+      margin-top: 48px;
+      padding: 24px;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+
+    </style>
+</head>
+
+<body>
+
+<div class="qr-wrapper" data-aos="fade-up" data-aos-duration="1000">
+    <h2 class="qr-title">VenomQR Studio</h2>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs justify-content-center" id="qr-tabs">
+        <li class="nav-item">
+            <button class="nav-link active" data-target="#tab-text">Text / URL</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-target="#tab-wifi">WiFi</button>
+        </li>
+    </ul>
+
+    <!-- Text / URL TAB -->
+    <div id="tab-text" class="tab-content-section mt-4">
+
+        <label class="input-label">Enter Text or URL</label>
+        <input type="text" id="input-data" class="form-control mb-3" placeholder="Enter text or URL">
+
+        <label class="input-label">Caption (Optional)</label>
+        <input type="text" id="input-caption" class="form-control mb-3 " placeholder="Enter caption">
+
+        <!-- <label class="input-label">Logo URL</label>
+        <input type="text" id="input-logo" class="form-control mb-3" placeholder="Enter logo URL"> -->
+
+        <!-- <label class="input-label">Or Choose a Logo</label><br>
+        <img src="https://www.freepnglogos.com/uploads/whatsapp-png-logo-7.png"
+             class="logo-select"
+             onclick="setLogo(this.src)"> -->
+
+        <button class="btn-main mt-3" onclick="createQR()">Generate QR Code</button>
+
+        <div class="loading-spinner" id="qr-loading"></div>
+        <div id="qr-output"></div>
+    </div>
+
+    <!-- WiFi TAB -->
+    <div id="tab-wifi" class="tab-content-section mt-4" style="display:none;">
+<center><h3>Under Development</h3></center>
+    </div>
+   <div class="footer">
+        Developed by Dark Venom
+      </div>
+</div>
+
+<script>
+    const tabs = document.querySelectorAll("#qr-tabs .nav-link");
+    const sections = document.querySelectorAll(".tab-content-section");
+
+    // TAB SWITCHING
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            sections.forEach(s => s.style.display = "none");
+
+            tab.classList.add("active");
+            document.querySelector(tab.dataset.target).style.display = "block";
+        });
+    });
+
+    // SET LOGO FROM IMAGE PICKER
+    function setLogo(src) {
+        document.getElementById("input-logo").value = src;
+    }
+
+    // GENERATE QR
+    function createQR() {
+        const data = document.getElementById("input-data").value.trim();
+        const caption = document.getElementById("input-caption").value.trim();
+        // const logo = document.getElementById("input-logo").value.trim();
+
+        const loading = document.getElementById("qr-loading");
+        const output = document.getElementById("qr-output");
+
+        if (data === "") {
+            output.innerHTML = "<p style='color:red;text-align:center;'>Enter some text first!</p>";
+            return;
+        }
+
+        output.innerHTML = "";
+        loading.style.display = "block";
+
+        const qrSize = 450;
+        // const maxLogoSize = qrSize * 0.3; // Max 30% of QR size
+
+        const qrURL =
+            "https://quickchart.io/qr?ecLevel=Q&" +
+            "text=" + encodeURIComponent(data) +
+            "&caption=" + encodeURIComponent(caption) +
+            "&captionFontSize=20" +
+            "&size=" + qrSize;
+            // "&centerImagesUrl=" + encodeURIComponent(logo) +
+           // "&centerImageWidth=" + maxLogoSize +
+            // "&centerImageHeight=" + maxLogoSize
+
+        const img = new Image();
+        img.src = qrURL;
+
+        img.onload = () => {
+            loading.style.display = "none";
+            output.appendChild(img);
+        };
+
+        img.onerror = () => {
+            loading.style.display = "none";
+            output.innerHTML = "<p style='color:red;text-align:center;'>Failed to load QR.</p>";
+        };
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init();
+</script>
+</body>
+</html>

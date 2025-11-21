@@ -1,0 +1,20 @@
+ <div class="mb-3">
+                    <label for="data" class="form-label">Enter Text or URL:</label>
+                    <input type="text" class="form-control" id="data" name="data" placeholder="Enter text or URL"  required>
+                    <br>
+                    <label for="caption" class="form-label">Enter Caption (Optional):</label>
+                    <input type="text" class="form-control" id="caption" placeholder="Enter Your Caption Here">
+                    <br>
+                <input type="text" class="form-control" id="logourl" placeholder="Enter Logo Image URL Here">
+                    <img src="https://www.freepnglogos.com/uploads/whatsapp-png-logo-7.png" onclick="logourlChange(this.src)" width="100" height="auto" alt="whtsapp logo" srcset="">
+                
+                </div>
+                <button type="button" class="btn btn-primary" onclick="generateqr()">Generate QR Code</button>
+                 <div class="loadingio-spinner-spinner-2by998twmg8" id="load"><div class="ldio-yzaezf3dcmj">
+<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+</div></div>
+          <div class="mt-4" id="qrCodeContainer">
+                    <!-- QR Code will be displayed here -->
+                </div>
+            <!-- </form> -->
+        </div>
