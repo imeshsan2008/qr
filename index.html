@@ -344,7 +344,8 @@
                 <div id="drive-status" class="small mt-2 text-white-50"><i class="fas fa-info-circle"></i> Not connected
                 </div>
             </div>
-
+            <label for="caption">Caption (optional)</label>
+            <input type="text" id="caption" class="form-control mb-2" placeholder="Caption">
             <!-- File upload area + previews (disabled until drive connected) -->
             <label class="input-label"><i class="fas fa-cloud-upload-alt"></i> Upload files (PDF, image, video)</label>
             <input type="file" id="file-uploader" class="form-control mb-2" multiple disabled>
@@ -355,6 +356,7 @@
 
             <!-- Preview grid -->
             <div id="preview-container" class="preview-grid"></div>
+
 
             <!-- QR action after upload to drive -->
             <button class="btn-main mt-4 btn-gen" id="generate-drive-qr-btn" onclick="generateDriveFileQR()" disabled>
@@ -392,6 +394,7 @@
         const driveQrOutput = document.getElementById('drive-qr-output');
         const generateDriveBtn = document.getElementById('generate-drive-qr-btn');
         const uploadHelp = document.getElementById('upload-help');
+        const caption = document.getElementById('caption').value;
 
         // ---------- Google OAuth 2.0 (implicit flow) ----------
         function handleDriveLogin() {
@@ -655,7 +658,6 @@
             // Build links string
             let linksString = uploadedDriveFiles.map(f => f.webViewLink).join("\n");
 
-            const caption = 'Venom Drive Files';
             const qrSize = 450;
 
             const qrUrl = `https://quickchart.io/qr?ecLevel=Q&text=${encodeURIComponent(linksString)}&caption=${encodeURIComponent(caption)}&captionFontSize=18&size=${qrSize}`;
