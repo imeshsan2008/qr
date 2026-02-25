@@ -394,7 +394,6 @@
         const driveQrOutput = document.getElementById('drive-qr-output');
         const generateDriveBtn = document.getElementById('generate-drive-qr-btn');
         const uploadHelp = document.getElementById('upload-help');
-        const caption = document.getElementById('caption').value;
 
         // ---------- Google OAuth 2.0 (implicit flow) ----------
         function handleDriveLogin() {
@@ -657,6 +656,7 @@
 
             // Build links string
             let linksString = uploadedDriveFiles.map(f => f.webViewLink).join("\n");
+            const caption = document.getElementById('caption').value;
 
             const qrSize = 450;
 
