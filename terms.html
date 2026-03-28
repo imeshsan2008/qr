@@ -1,22 +1,556 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Terms of Service - QR Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="unsafe-none">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <title>Venom Qr Studio</title>
+
+    <!-- Bootstrap + AOS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Font Awesome 6 (free) for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #e63946;
+            --glass-bg: rgba(20, 30, 40, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            --dark-bg: #0a0c0f;
+            --light-text: #f0f3f8;
+        }
+
+        body {
+            background: radial-gradient(circle at 30% 10%, #1a252f, #030405);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 🧊 Liquid Glass wrapper */
+        .qr-wrapper {
+            background: var(--glass-bg);
+            backdrop-filter: blur(18px) saturate(180%);
+            -webkit-backdrop-filter: blur(18px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 42px;
+            padding: 30px 28px;
+            transition: all 0.3s ease;
+            color: var(--light-text);
+        }
+
+        .qr-title {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 10px rgba(230, 57, 70, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+            gap: 10px;
+            padding-bottom: 16px;
+        }
+
+        .qr-title i {
+            color: var(--primary);
+            font-size: 2rem;
+        }
+
+        /* glass tabs */
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tabs .nav-link {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px !important;
+            color: #ccc;
+            font-weight: 600;
+            padding: 10px 24px;
+            margin-right: 6px;
+            backdrop-filter: blur(8px);
+            transition: 0.2s;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4);
+        }
+
+        /* glass inputs */
+        .form-control,
+        .form-control:focus {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            color: white;
+            padding: 12px 18px;
+            box-shadow: none;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            background: rgba(20, 20, 30, 0.7);
+        }
+
+        .input-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            margin-left: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Liquid glass button */
+        .btn-main {
+            background: rgba(230, 57, 70, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 14px 22px;
+            border-radius: 40px;
+            font-weight: 700;
+            width: 100%;
+            transition: 0.25s;
+            box-shadow: 0 10px 20px -8px rgba(230, 57, 70, 0.4);
+            letter-spacing: 0.3px;
+        }
+
+        .btn-main:hover {
+            background: #e63946;
+            border-color: #fff;
+            transform: scale(1.02);
+            box-shadow: 0 18px 30px -5px #e63946;
+        }
+
+        /* progress bar glass style */
+        .progress {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 30px;
+            height: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            border-radius: 30px;
+            box-shadow: 0 0 10px #e63946;
+        }
+
+        /* file preview cards */
+        .preview-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preview-card {
+            background: rgba(10, 15, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 15px;
+            width: 170px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .preview-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+        }
+
+        .preview-card img,
+        .preview-card video,
+        .preview-card iframe {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 18px;
+            background: #1e1e2a;
+        }
+
+        .preview-card .file-name {
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin: 8px 0 4px;
+        }
+
+        .remove-preview {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 1px solid white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .remove-preview:hover {
+            background: var(--primary);
+        }
+
+        /* GDrive section */
+        .drive-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 30px;
+            padding: 20px;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading-spinner {
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #qr-output img,
+        #drive-qr-output img {
+            border-radius: 28px;
+            box-shadow: 0 20px 40px black;
+            background: white;
+            padding: 10px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .badge-success {
+            background: rgba(40, 167, 69, 0.3);
+            border: 1px solid #28a745;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+        }
+
+        .btn-gen:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ── FIXED: main layout ── */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;           /* wraps on smaller screens */
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        /* QR generator takes available space, min 340px */
+        .qr-wrapper.qr-main {
+            flex: 1 1 340px;
+            max-width: 780px;
+            min-width: 300px;
+            margin: 0;
+        }
+
+        /* History panel fixed width, shrinks to full-width on wrap */
+        .qr-wrapper.qr-history {
+            flex: 0 1 340px;
+            min-width: 280px;
+            margin: 0;
+        }
+
+        /* History list items */
+        #qr-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(230,57,70,0.08);
+            border-color: rgba(230,57,70,0.4);
+        }
+
+        .history-thumb {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 12px;
+            padding: 3px;
+            overflow: hidden;
+        }
+
+        .history-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .history-meta {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .history-meta .h-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-meta .h-date {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 30px 10px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+        }
+
+        .history-empty i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* history section label */
+        .history-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            color: rgba(255,255,255,0.85);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-title i { color: var(--primary); }
+    </style>
 </head>
 
 <body>
-    <h1>Terms of Service</h1>
-    <p>By using this application, you agree to use it responsibly and legally.</p>
+    <div style="float: right; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;" >
+            <div class="container" style="display: none; margin-right: 5px;" id="user-info"> 
+<div style="display: flex;">
+        <span id="text">
+            <img id="profile-photo" src="#" alt="profilePhoto" height="40px" width="40px" style="border-radius: 50%;"   >
+            <span id="user-name" style="color: white; margin-left: 10px; margin-right: 10px; font-size: 15px; font-weight: 500; ">Hello,</span>
+        </span>
+      
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-4 " style="margin-left: 5px; display: none;"
+            id="gdrive-signout-btn" onclick="handleDriveLogout()"><i class="fas fa-sign-out-alt"></i>
+            logout</button>
+        </div> 
+          
+    
+    </div>
+             <button
+            class="btn btn-outline-light btn-sm rounded-pill px-4 " style="margin-right: 5px; display: none;"
+            id="gdrive-signin-btn" onclick="handleDriveLogin()">
+            <i class="fab fa-google"></i> Sign in
+        </button>      
+   </div>         
+            
+            <div id="drive-status" class="small mt-2 text-white-50"><i class="fas fa-info-circle"></i> Not connected</div>
 
-    <h2>Usage</h2>
-    <p>This app allows QR generation and Google Drive uploads.</p>
+<div class="main-container" style="margin-top: 10px;">
 
-    <h2>Liability</h2>
-    <p>The developer is not responsible for misuse of the application.</p>
+    <!-- QR Generator (left) -->
+    <div class="qr-wrapper qr-main" data-aos="fade-up" data-aos-duration="1000">
+        <div style="text-align: center; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <span class="qr-title text-center">VenomQR <span style="color:var(--primary);">Studio</span></span>
+        </div>
 
-    <h2>Changes</h2>
-    <p>We may update these terms at any time.</p>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs justify-content-center" id="qr-tabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-target="#tab-text"><i class="fas fa-link"></i> Text/URL</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-target="#tab-upload"><i class="fas fa-cloud-upload-alt"></i> Files</button>
+            </li>
+        </ul>
+
+        <!-- TEXT / URL TAB -->
+        <div id="tab-text" class="tab-content-section mt-4">
+            <label class="input-label"><i class="fas fa-pencil-alt"></i> Text or URL</label>
+            <input type="text" id="input-data" class="form-control mb-3" placeholder="https:// or any text">
+
+            <label class="input-label"><i class="fas fa-caption"></i> Caption (optional)</label>
+            <input type="text" id="input-caption" class="form-control mb-3" placeholder="QR caption">
+
+            <button class="btn-main mt-2" onclick="createQR()"><i class="fas fa-qrcode"></i> Generate QR Code</button>
+            <div id="qr-output" class="text-center"></div>
+        </div>
+
+        <!-- UPLOAD TAB -->
+        <div id="tab-upload" class="tab-content-section mt-4" style="display:none;">
+            <label for="caption">Caption (optional)</label>
+            <input type="text" id="caption" class="form-control mb-2" placeholder="Caption">
+
+            <label class="input-label"><i class="fas fa-cloud-upload-alt"></i> Upload files (PDF, image, video)</label>
+            <input type="file" id="file-uploader" class="form-control mb-2" multiple disabled>
+            <small class="text-white-50" id="upload-help">Connect to Google Drive first to enable uploads</small>
+
+            <div id="upload-progress-container" class="my-2"></div>
+            <div id="preview-container" class="preview-grid"></div>
+
+            <button class="btn-main mt-4 btn-gen" id="generate-drive-qr-btn" onclick="generateDriveFileQR()" disabled>
+                <i class="fas fa-link"></i> Generate QR for uploaded files
+            </button>
+            <div id="drive-qr-output" class="text-center mt-3"></div>
+        </div>
+
+        <div class="footer">
+            Developed by <a href="https://imeshsan2008.github.io" class="text-danger text-decoration-none">Dark Venom</a>
+        </div>
+    </div>
+
+    <!-- History (right) -->
+    <div class="qr-wrapper qr-history" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100">
+        <div class="history-title">
+            <i class="fas fa-history"></i> QR History
+        </div>
+        <div id="qr-history-list">
+            <div class="history-empty">
+                <i class="fas fa-clock"></i>
+                Generated QR codes will appear here
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    AOS.init();
+
+    // Tab switching
+    document.querySelectorAll('#qr-tabs .nav-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#qr-tabs .nav-link').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-content-section').forEach(t => t.style.display = 'none');
+            const target = btn.getAttribute('data-target');
+            const el = document.querySelector(target);
+            if (el) el.style.display = 'block';
+        });
+    });
+
+    // QR generation
+    function createQR() {
+        const data = document.getElementById('input-data').value.trim();
+        const caption = document.getElementById('input-caption').value.trim();
+        if (!data) {
+            Swal.fire({ title: 'Oops!', text: 'Please enter text or a URL.', icon: 'warning', background: '#1a2530', color: '#fff', confirmButtonColor: '#e63946' });
+            return;
+        }
+        const url = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data)}&size=400x400`;
+        document.getElementById('qr-output').innerHTML =
+            `<img src="${url}" alt="QR Code">
+             ${caption ? `<p class="mt-2" style="font-size:.85rem;color:rgba(255,255,255,.6);">${caption}</p>` : ''}`;
+        addToHistory(caption || data, url);
+    }
+
+    function generateDriveFileQR() { /* wire your real logic here */ }
+    function handleDriveLogin()   { /* wire your real logic here */ }
+    function handleDriveLogout()  { /* wire your real logic here */ }
+
+    // History
+    const historyItems = [];
+
+    function addToHistory(label, qrUrl) {
+        historyItems.unshift({ label, qrUrl, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+        renderHistory();
+    }
+
+    function renderHistory() {
+
+    }
+
+    function previewQR(i) {
+        const item = historyItems[i];
+        Swal.fire({
+            title: item.label,
+            imageUrl: item.qrUrl,
+            imageWidth: 220,
+            background: '#1a2530',
+            color: '#fff',
+            confirmButtonColor: '#e63946',
+            confirmButtonText: 'Close',
+            showCancelButton: true,
+            cancelButtonText: '⬇ Download',
+            cancelButtonColor: '#333'
+        }).then(r => {
+            if (r.isDismissed && r.dismiss === Swal.DismissReason.cancel) {
+                const a = document.createElement('a');
+                a.href = item.qrUrl; a.download = 'qr.png'; a.click();
+            }
+        });
+    }
+</script>
 </body>
-
 </html>

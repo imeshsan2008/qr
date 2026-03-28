@@ -1,4 +1,23 @@
-  <style>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="unsafe-none">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <title>Venom Qr Studio</title>
+
+    <!-- Bootstrap + AOS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Font Awesome 6 (free) for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -23,6 +42,8 @@
 
         /* 🧊 Liquid Glass wrapper */
         .qr-wrapper {
+            max-width: 780px;
+            margin: 40px auto;
             background: var(--glass-bg);
             backdrop-filter: blur(18px) saturate(180%);
             -webkit-backdrop-filter: blur(18px) saturate(180%);
@@ -45,6 +66,7 @@
             text-align: center;
             margin: 0 auto;
             gap: 10px;
+            /* border-bottom: 1px dashed rgba(255, 255, 255, 0.2); */
             padding-bottom: 16px;
         }
 
@@ -259,117 +281,137 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+    </style>
+</head>
 
-        /* ── FIXED: main layout ── */
-        .main-container {
-            display: flex;
-            flex-wrap: wrap;           /* wraps on smaller screens */
-            gap: 20px;
-            align-items: flex-start;
-            justify-content: center;
-        }
+<body>
+    <div style="float: right; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;" >
+            <div class="container" style="display: none; margin-right: 5px;" id="user-info"> 
+<div style="display: flex;">
+        <span id="text">
+            <img id="profile-photo" src="#" alt="profilePhoto" height="40px" width="40px" style="border-radius: 50%;"   >
+            <span id="user-name" style="color: white; margin-left: 10px; margin-right: 10px; font-size: 15px; font-weight: 500; ">Hello,</span>
+        </span>
+      
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-4 " style="margin-left: 5px; display: none;"
+            id="gdrive-signout-btn" onclick="handleDriveLogout()"><i class="fas fa-sign-out-alt"></i>
+            logout</button>
+        </div> 
+          
+    
+    </div>
+             <button
+            class="btn btn-outline-light btn-sm rounded-pill px-4 " style="margin-right: 5px; display: none;"
+            id="gdrive-signin-btn" onclick="handleDriveLogin()">
+            <i class="fab fa-google"></i> Sign in
+        </button>      
+   </div>         
+            
+            <div id="drive-status" class="small mt-2 text-white-50"><i class="fas fa-info-circle"></i> Not connected</div>
 
-        /* QR generator takes available space, min 340px */
-        .qr-wrapper.qr-main {
-            flex: 1 1 340px;
-            max-width: 780px;
-            min-width: 300px;
-            margin: 0;
-        }
+<div style="display: flex; width: 100%;">
 
-        /* History panel fixed width, shrinks to full-width on wrap */
-        .qr-wrapper.qr-history {
-            flex: 0 1 340px;
-            min-width: 280px;
-            margin: 0;
-        }
+    <div class="qr-wrapper" data-aos="fade-up" data-aos-duration="1000">
+        <div
+            style="text-align: center; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    
+            <span class="qr-title text-center">VenomQR <span style="color:var(--primary);">Studio</span>
+            </span>
+           
+    
+        </div>
 
-        /* History list items */
-        #qr-history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 8px;
-        }
+        <!-- Tabs: existing text/wifi + new UPLOAD tab -->
+        <ul class="nav nav-tabs justify-content-center" id="qr-tabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-target="#tab-text"><i class="fas fa-link"></i> Text/URL</button>
+            </li>
 
-        .history-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 10px 14px;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-        }
+            <li class="nav-item">
+                <button class="nav-link" data-target="#tab-upload"><i class="fas fa-cloud-upload-alt"></i> Files
+                </button>
+            </li>
+            <!-- <li class="nav-item">
+                <button class="nav-link" data-target="#tab-wifi"><i class="fas fa-wifi"></i> WiFi</button>
+            </li> -->
+        </ul>
 
-        .history-item:hover {
-            background: rgba(230,57,70,0.08);
-            border-color: rgba(230,57,70,0.4);
-        }
+        <!-- ========== TEXT / URL TAB (existing, but adjusted) ========= -->
+        <div id="tab-text" class="tab-content-section mt-4">
+            <label class="input-label"><i class="fas fa-pencil-alt"></i> Text or URL</label>
+            <input type="text" id="input-data" class="form-control mb-3" placeholder="https:// or any text">
 
-        .history-thumb {
-            flex-shrink: 0;
-            width: 48px;
-            height: 48px;
-            background: white;
-            border-radius: 12px;
-            padding: 3px;
-            overflow: hidden;
-        }
+            <label class="input-label"><i class="fas fa-caption"></i> Caption (optional)</label>
+            <input type="text" id="input-caption" class="form-control mb-3" placeholder="QR caption">
 
-        .history-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+            <button class="btn-main mt-2" onclick="createQR()"><i class="fas fa-qrcode"></i> Generate QR Code</button>
+            <div id="qr-output" class="text-center"></div>
+        </div>
 
-        .history-meta {
-            flex: 1;
-            overflow: hidden;
-        }
+        <!-- ========== WIFI TAB (placeholder, under development) ========= -->
+        <!-- <div id="tab-wifi" class="tab-content-section mt-4" style="display:none;">
+            <div class="drive-card text-center p-5">
+                <i class="fas fa-tools fa-3x mb-3" style="color:var(--primary);"></i>
+                <h4>⚡ WiFi QR — under development</h4>
+                <p class="text-white-50">Soon you'll generate WiFi QR codes with liquid glass.</p>
+            </div>
+        </div> -->
 
-        .history-meta .h-label {
-            font-size: 0.82rem;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        <!-- ========== NEW UPLOAD + GDRIVE + QR TAB ========= -->
+        <div id="tab-upload" class="tab-content-section mt-4" style="display:none;">
+            <!-- Google Drive login card
+            <div class="drive-card mb-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <span><i class="fab fa-google-drive" style="color:#7aaae0;"></i> <strong>Google
+                            Drive</strong></span>
 
-        .history-meta .h-date {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.4);
-            margin-top: 2px;
-        }
+                    <div> <button class="btn btn-outline-light btn-sm rounded-pill px-4 " style="margin-right: 5px;"
+                            id="gdrive-signin-btn" onclick="handleDriveLogin()">
+                            <i class="fab fa-google"></i> Sign in
+                        </button> <button class="btn btn-outline-danger btn-sm rounded-pill px-4 "
+                            style="margin-left: 5px;" id="gdrive-signout-btn" onclick="handleDriveLogout()"><i
+                                class="fas fa-sign-out-alt"></i>
+                            logout</button></div>
+                </div>
+                <div id="drive-status" class="small mt-2 text-white-50"><i class="fas fa-info-circle"></i> Not connected
+                </div>
+            </div> -->
+            <label for="caption">Caption (optional)</label>
+            <input type="text" id="caption" class="form-control mb-2" placeholder="Caption">
+            <!-- File upload area + previews (disabled until drive connected) -->
+            <label class="input-label"><i class="fas fa-cloud-upload-alt"></i> Upload files (PDF, image, video)</label>
+            <input type="file" id="file-uploader" class="form-control mb-2" multiple disabled>
+            <small class="text-white-50" id="upload-help">Connect to Google Drive first to enable uploads</small>
 
-        .history-empty {
-            text-align: center;
-            padding: 30px 10px;
-            color: rgba(255,255,255,0.3);
-            font-size: 0.85rem;
-        }
+            <!-- Progress bars container -->
+            <div id="upload-progress-container" class="my-2"></div>
 
-        .history-empty i {
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 10px;
-        }
+            <!-- Preview grid -->
+            <div id="preview-container" class="preview-grid"></div>
 
-        /* history section label */
-        .history-title {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 4px;
-            color: rgba(255,255,255,0.85);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
 
-        .history-title i { color: var(--primary); }
-    </style>    <script>
+            <!-- QR action after upload to drive -->
+            <button class="btn-main mt-4 btn-gen" id="generate-drive-qr-btn" onclick="generateDriveFileQR()" disabled>
+                <i class="fas fa-link"></i> Generate QR for uploaded files
+            </button>
+            <div id="drive-qr-output" class="text-center mt-3"></div>
+        </div>
+
+        <div class="footer">
+            Developed by <a href="https://imeshsan2008.github.io" class="text-danger text-decoration-none">Dark Venom
+            </a>
+        </div>
+        
+    </div>
+    <div id="qr-history " class="qr-wrapper" data-aos="fade-up" data-aos-duration="1000">
+    <label for="qr-history">QR History</label>
+    <div id="qr-history-list"></div>
+</div>
+</div>
+
+    <!-- GDrive OAuth client-side library -->
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script>
         /**********************************************
          *  GLOBAL STATE & CONFIG (CLIENT-SIDE OAUTH)
          **********************************************/
@@ -439,7 +481,6 @@ async function handleDriveLogin() {
                 document.getElementById("gdrive-signin-btn").style.display = "none";
                 document.getElementById("gdrive-signout-btn").style.display = "block";
                 document.getElementById("user-info").style.display = "block";
-                   await  renderHistory();
 
                 try {
                 
@@ -755,13 +796,12 @@ function appendData(existingData, newImage) {
         console.warn("❌ Wrong data format detected, fixing...");
         newImage = newImage.images[0]; // take first item only
     }
-const d = new Date();
-let date = d.toDateString();
+
     const imageWithId = {
         id: newImage.id || generateId(),
         caption: newImage.caption || "",
         qrURL: newImage.qrURL || "",
-        created: date
+        created: newImage.created || Date.now()
     };
 
     existingData.images.push(imageWithId);
@@ -858,122 +898,6 @@ async function upsertJsonFile(folderId, fileName, data = {}) {
         throw error;
     }
 }
-
-    // History
-    const historyItems = [];
-
-async function deleteHistoryItem(index) {
-    const item = historyItems[0][index];
-    if (!item) return;
-
-    // Remove from local array
-    historyItems[0].splice(index, 1);
-    renderHistory();
-Swal.fire({
-        title: "Deleting...",
-        text: "Please wait...",
-        icon: "info",
-        showCancelButton: false,
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-       });
-    try {
-        const driveFolderId = sessionStorage.getItem("driveFolderId");
-        const accessToken = sessionStorage.getItem("driveAccessToken");
-        if (!driveFolderId || !accessToken) throw new Error("Missing Drive info");
-
-       
-        // Fetch the file ID
-        const query = `'${driveFolderId}' in parents and name='data.json' and mimeType='application/json' and trashed=false`;
-        const fileRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        const fileData = await fileRes.json();
-        const fileId = fileData.files && fileData.files[0] ? fileData.files[0].id : null;
-
-        if (!fileId) throw new Error("File not found on Drive");
-
-        console.log("File ID:", fileId);
-
-        // Update file content
-        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ images: historyItems[0] }) // send the updated array
-        });
-        Swal.close();
-    await  renderHistory();
-
-        console.log("Deleted item and updated Drive successfully");
-    } catch (err) {
-        console.error("Failed to update Drive:", err);
-    }
-}
-
-
-async function renderHistory() {
-    const driveFolderId = sessionStorage.getItem("driveFolderId");
-    const data = await getJsonFile(driveFolderId, "data.json");
-    historyItems.push(data.images);
-
-    const list = document.getElementById('qr-history-list');
-    if (!data.images.length) return;
-
-    list.innerHTML = data.images.map((item, i) => `
-        <div class="history-item" id="history-${i}">
-            <div class="history-thumb"><img src="${item.qrURL}" alt=""></div>
-            <div class="history-meta">
-                <div class="h-label">${item.caption}</div>
-                <div class="h-date"><i class="fas fa-clock" style="font-size:.6rem;"></i> ${item.created}</div>
-                <button class="btn btn-sm btn-danger" onclick="deleteHistoryItem(${i})" style="margin-top:5px width:100px">Delete</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function previewQR(i) {
-const item = historyItems[0][i]; 
-    
-    Swal.fire({
-        title: item.caption,
-        imageUrl: item.qrURL,
-        imageWidth: 220,
-        background: '#1a2530',
-        color: '#fff',
-        confirmButtonColor: '#e63946',
-        confirmButtonText: 'Close',
-        showCancelButton: true,
-        cancelButtonText: '⬇ Download',
-        cancelButtonColor: '#333'
-    }).then(async r => {
-        if (r.isDismissed && r.dismiss === Swal.DismissReason.cancel) {
-            try {
-                const response = await fetch(item.qrURL, { mode: 'cors' });
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement('a');
-                a.href = url;
-                // Use caption as filename, fallback to _qr.png
-                a.download = (item.caption+"_qr.png" || '_qr.png');
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-
-                URL.revokeObjectURL(url); // clean up
-            } catch (err) {
-                console.error('Download failed', err);
-                alert('Failed to download image.');
-            }
-        }
-    });
-}
 async function getJsonFile(folderId, fileName) {
     const accessToken = sessionStorage.getItem("driveAccessToken");
     if (!accessToken) throw new Error("No Drive access token found");
@@ -1004,9 +928,10 @@ async function getJsonFile(folderId, fileName) {
 
 (async () => {
     try {
-    await  renderHistory();
-        
-        } catch (err) {
+        const driveFolderId = sessionStorage.getItem("driveFolderId");
+        const data = await getJsonFile(driveFolderId, "data.json");
+        console.log("File content:", data);
+    } catch (err) {
         console.error(err);
     }
 })();
@@ -1084,16 +1009,7 @@ async function getJsonFile(folderId, fileName) {
             const data = document.getElementById("input-data").value.trim();
             const caption = document.getElementById("input-caption").value.trim();
             const output = document.getElementById("qr-output");
-          Swal.fire({
-            title: "Generating QR Code...",
-            text: "Please wait...",
-            icon: "info",
-            showCancelButton: false,
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-          });
+
             if (data === "") {
                 output.innerHTML = "<p style='color:red;text-align:center;'>Enter some text first!</p>";
                 return;
@@ -1114,7 +1030,9 @@ async function getJsonFile(folderId, fileName) {
                 if (accessToken && driveFolderId && qrURL) {
 
                     const data = {
- 
+    images: [
+       
+    ]
 };
                     console.log(qrURL);
 
@@ -1124,12 +1042,9 @@ async function getJsonFile(folderId, fileName) {
                         "qrURL": qrURL,
                     };
                     console.log(newImage);
-                    // updated = await appendData( newImage);
-                    // console.log(updated);
-                    await upsertJsonFile(driveFolderId, "data.json", newImage);
-                                    Swal.close();
-
-    await  renderHistory();
+                    updated = await appendData(data, newImage);
+                    console.log(updated);
+                    await upsertJsonFile(driveFolderId, "data.json", updated);
 
                 }
 
@@ -1274,8 +1189,6 @@ document.getElementById("gdrive-signin-btn").addEventListener("click", async () 
     const token = await signInWithGoogle(); // your function to get token
     if (token) {
         sessionStorage.setItem("driveAccessToken", token);
-        sessionStorage.setItem("driveAccessToken", accessToken);
-
         updateUI(); // update UI immediately
     }
 });
@@ -1286,7 +1199,7 @@ document.getElementById("gdrive-signout-btn").addEventListener("click", () => {
     userInfo = null;
     updateUI(); // update UI immediately
 });
-       async function handleDriveLogout() {
+        function handleDriveLogout() {
             sessionStorage.removeItem("driveAccessToken");
             driveStatus.innerHTML = `<i class="fas fa-info-circle"></i> Not connected`;
             fileUploader.disabled = true;
@@ -1295,8 +1208,12 @@ document.getElementById("gdrive-signout-btn").addEventListener("click", () => {
 
             document.getElementById("gdrive-signin-btn").style.display = "block";
             document.getElementById("gdrive-signout-btn").style.display = "none";
-
-
-
         } 
     </script>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+</body>
+
+</html>

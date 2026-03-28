@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
     <meta http-equiv="Cross-Origin-Embedder-Policy" content="unsafe-none">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <title>Venom Qr Studio</title>
 
     <!-- Bootstrap + AOS -->
@@ -40,8 +42,6 @@
 
         /* 🧊 Liquid Glass wrapper */
         .qr-wrapper {
-            max-width: 780px;
-            margin: 40px auto;
             background: var(--glass-bg);
             backdrop-filter: blur(18px) saturate(180%);
             -webkit-backdrop-filter: blur(18px) saturate(180%);
@@ -64,7 +64,6 @@
             text-align: center;
             margin: 0 auto;
             gap: 10px;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
             padding-bottom: 16px;
         }
 
@@ -72,7 +71,13 @@
             color: var(--primary);
             font-size: 2rem;
         }
-
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .qr-title {
+        font-size: 1.2rem; /* smaller font on mobile */
+    }
+    
+}
         /* glass tabs */
         .nav-tabs {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -279,542 +284,1123 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* ── FIXED: main layout ── */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            /* wraps on smaller screens */
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        /* QR generator takes available space, min 340px */
+        .qr-wrapper.qr-main {
+            flex: 1 1 340px;
+            max-width: 780px;
+            min-width: 300px;
+            margin: 0;
+        }
+
+        /* History panel fixed width, shrinks to full-width on wrap */
+        .qr-wrapper.qr-history {
+            flex: 0 1 340px;
+            min-width: 280px;
+            max-height: 500px;
+            overflow-y: auto;
+
+            margin: 0;
+        }
+
+/* Scrollbar styling */
+.qr-wrapper.qr-history::-webkit-scrollbar {
+    width: 5px;
+}
+
+.qr-wrapper.qr-history::-webkit-scrollbar-track {
+    background: rgba(209, 0, 17, 0.2);
+    border-radius: 50px;
+}
+
+.qr-wrapper.qr-history::-webkit-scrollbar-thumb {
+    background: rgba(209, 0, 17, 0.7);
+    border-radius: 50px;
+}
+        /* History list items */
+        #qr-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(230, 57, 70, 0.08);
+            border-color: rgba(230, 57, 70, 0.4);
+        }
+
+        .history-thumb {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 12px;
+            padding: 3px;
+            overflow: hidden;
+        }
+
+        .history-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .history-meta {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .history-meta .h-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-meta .h-date {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 2px;
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 30px 10px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.85rem;
+        }
+
+        .history-empty i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* history section label */
+        .history-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-title i {
+            color: var(--primary);
+        }
     </style>
 </head>
 
 <body>
+    <div style="float: right; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; ">
+        <div class="container" style="display: none; margin-right: 5px;" id="user-info">
+            <div style="display: flex;">
+                <span id="text">
+                    <img id="profile-photo" src="#" alt="profilePhoto" height="40px" width="40px"
+                        style="border-radius: 50%;">
+                    <span id="user-name"
+                        style="color: white; margin-left: 10px; margin-right: 10px; font-size: 15px; font-weight: 500; ">Hello,</span>
+                </span>
 
-    <div class="qr-wrapper" data-aos="fade-up" data-aos-duration="1000">
-        <div style="text-align: center;">
-            <span class="qr-title text-center">VenomQR <span style="color:var(--primary);">Studio</span></span>
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-4 "
+                    style="margin-left: 5px; display: none;" id="gdrive-signout-btn" onclick="handleDriveLogout()"><i
+                        class="fas fa-sign-out-alt"></i>
+                    logout</button>
+            </div>
+
+
         </div>
+        <button class="btn btn-outline-light btn-sm rounded-pill px-4 " style="margin-right: 5px; display: none;"
+            id="gdrive-signin-btn" onclick="handleDriveLogin()">
+            <i class="fab fa-google"></i> Sign in
+        </button>
+    </div>
 
-        <!-- Tabs: existing text/wifi + new UPLOAD tab -->
-        <ul class="nav nav-tabs justify-content-center" id="qr-tabs">
-            <li class="nav-item">
-                <button class="nav-link active" data-target="#tab-text"><i class="fas fa-link"></i> Text/URL</button>
-            </li>
+    <div id="drive-status" class="small mt-2 text-white-50"><i class="fas fa-info-circle"></i> Not connected</div>
 
-            <li class="nav-item">
-                <button class="nav-link" data-target="#tab-upload"><i class="fas fa-cloud-upload-alt"></i> Files
+    <div class="main-container" style="margin-top: 10px;">
+
+        <!-- QR Generator (left) -->
+        <div class="qr-wrapper qr-main" data-aos="fade-up" data-aos-duration="1000">
+            <div
+                style="text-align: center; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <span class="qr-title text-center">VenomQR <span style="color:var(--primary);">Studio V2.0</span></span>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs justify-content-center mt-4 " id="qr-tabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-target="#tab-text"><i class="fas fa-link"></i>
+                        Text/URL</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-target="#tab-upload"><i class="fas fa-cloud-upload-alt"></i>
+                        Files</button>
+                </li>
+            </ul>
+
+            <!-- TEXT / URL TAB -->
+            <div id="tab-text" class="tab-content-section mt-4">
+                <label class="input-label"><i class="fas fa-pencil-alt"></i> Text or URL</label>
+                <input type="text" id="input-data" class="form-control mb-3" placeholder="https:// or any text" >
+
+                <label class="input-label"><i class="fas fa-caption"></i> Caption (optional)</label>
+                <input type="text" id="input-caption" class="form-control mb-3" placeholder="QR caption">
+
+                <button class="btn-main mt-2" onclick="createQR()"><i class="fas fa-qrcode"></i> Generate QR
+                    Code</button>
+                <div id="qr-output" class="text-center"></div>
+            </div>
+
+            <!-- UPLOAD TAB -->
+            <div id="tab-upload" class="tab-content-section mt-4" style="display:none;">
+                <label for="caption">Caption (optional)</label>
+                <input type="text" id="caption" class="form-control mb-2" placeholder="Caption">
+
+                <label class="input-label"><i class="fas fa-cloud-upload-alt"></i> Upload files (PDF, image,
+                    video)</label>
+                <input type="file" id="file-uploader" class="form-control mb-2"  disabled>
+                <small class="text-white-50" id="upload-help">Connect to Google Drive first to enable uploads</small>
+
+                <div id="upload-progress-container" class="my-2"></div>
+                <div id="preview-container" class="preview-grid"></div>
+
+                <button class="btn-main mt-4 btn-gen" id="generate-drive-qr-btn" onclick="generateDriveFileQR()"
+                    disabled>
+                    <i class="fas fa-link"></i> Generate QR for uploaded files
                 </button>
-            </li>
-            <!-- <li class="nav-item">
-                <button class="nav-link" data-target="#tab-wifi"><i class="fas fa-wifi"></i> WiFi</button>
-            </li> -->
-        </ul>
+                <div id="drive-qr-output" class="text-center mt-3"></div>
+            </div>
 
-        <!-- ========== TEXT / URL TAB (existing, but adjusted) ========= -->
-        <div id="tab-text" class="tab-content-section mt-4">
-            <label class="input-label"><i class="fas fa-pencil-alt"></i> Text or URL</label>
-            <input type="text" id="input-data" class="form-control mb-3" placeholder="https:// or any text">
-
-            <label class="input-label"><i class="fas fa-caption"></i> Caption (optional)</label>
-            <input type="text" id="input-caption" class="form-control mb-3" placeholder="QR caption">
-
-            <button class="btn-main mt-2" onclick="createQR()"><i class="fas fa-qrcode"></i> Generate QR Code</button>
-            <div id="qr-output" class="text-center"></div>
+            <div class="footer">
+                Developed by <a href="https://imeshsan2008.github.io" class="text-danger text-decoration-none">Dark
+                    Venom</a><br>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSd_PR7-fPBD4--YKW7s0f4wN7DOOW7vKrHf7ZyzXyHNdvbs5A/viewform" target="_blank" class="text-warning text-decoration-none"> Give Feedback</a>
+            </div>
         </div>
 
-        <!-- ========== WIFI TAB (placeholder, under development) ========= -->
-        <!-- <div id="tab-wifi" class="tab-content-section mt-4" style="display:none;">
-            <div class="drive-card text-center p-5">
-                <i class="fas fa-tools fa-3x mb-3" style="color:var(--primary);"></i>
-                <h4>⚡ WiFi QR — under development</h4>
-                <p class="text-white-50">Soon you'll generate WiFi QR codes with liquid glass.</p>
+        <!-- History (right) -->
+        <div class="qr-wrapper qr-history" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100">
+            <div class="history-title">
+                <i class="fas fa-history"></i> QR History
             </div>
-        </div> -->
+            <div id="qr-history-list">
 
-        <!-- ========== NEW UPLOAD + GDRIVE + QR TAB ========= -->
-        <div id="tab-upload" class="tab-content-section mt-4" style="display:none;">
-            <!-- Google Drive login card -->
-            <div class="drive-card mb-4">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                    <span><i class="fab fa-google-drive" style="color:#7aaae0;"></i> <strong>Google
-                            Drive</strong></span>
-
-                    <div> <button class="btn btn-outline-light btn-sm rounded-pill px-4 " style="margin-right: 5px;"
-                            id="gdrive-signin-btn" onclick="handleDriveLogin()">
-                            <i class="fab fa-google"></i> Sign in
-                        </button> <button class="btn btn-outline-danger btn-sm rounded-pill px-4 "
-                            style="margin-left: 5px;" id="gdrive-signout-btn" onclick="handleDriveLogout()"><i
-                                class="fas fa-sign-out-alt"></i>
-                            logout</button></div>
-                </div>
-                <div id="drive-status" class="small mt-2 text-white-50"><i class="fas fa-info-circle"></i> Not connected
+                <div class="history-empty" id="history-empty">
+                    <i class="fas fa-clock"></i>
+                    Generated QR codes will appear here
                 </div>
             </div>
-            <label for="caption">Caption (optional)</label>
-            <input type="text" id="caption" class="form-control mb-2" placeholder="Caption">
-            <!-- File upload area + previews (disabled until drive connected) -->
-            <label class="input-label"><i class="fas fa-cloud-upload-alt"></i> Upload files (PDF, image, video)</label>
-            <input type="file" id="file-uploader" class="form-control mb-2" multiple disabled>
-            <small class="text-white-50" id="upload-help">Connect to Google Drive first to enable uploads</small>
-
-            <!-- Progress bars container -->
-            <div id="upload-progress-container" class="my-2"></div>
-
-            <!-- Preview grid -->
-            <div id="preview-container" class="preview-grid"></div>
-
-
-            <!-- QR action after upload to drive -->
-            <button class="btn-main mt-4 btn-gen" id="generate-drive-qr-btn" onclick="generateDriveFileQR()" disabled>
-                <i class="fas fa-link"></i> Generate QR for uploaded files
-            </button>
-            <div id="drive-qr-output" class="text-center mt-3"></div>
         </div>
 
-        <div class="footer">
-            Developed by <a href="https://imeshsan2008.github.io" class="text-danger text-decoration-none">Dark Venom
-            </a>
-        </div>
     </div>
 
     <!-- GDrive OAuth client-side library -->
     <script src="https://accounts.google.com/gsi/client"></script>
-    <script>
-        /**********************************************
-         *  GLOBAL STATE & CONFIG (CLIENT-SIDE OAUTH)
-         **********************************************/
-        // Using a more permissive client ID for testing
-        const CLIENT_ID = '683648057850-hpoedkcjkaf1pma67dstcorgrield10v.apps.googleusercontent.com';
-        const API_KEY = '[ENCRYPTION_KEY]'; // Adding API key for additional quota
-        const SCOPES = 'https://www.googleapis.com/auth/drive';
+    <script>/**********************************************
+ *  GLOBAL STATE & CONFIG (CLIENT-SIDE OAUTH)
+ **********************************************/
+const CLIENT_ID = '683648057850-hpoedkcjkaf1pma67dstcorgrield10v.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid';
 
-        let accessToken = null;
-        let driveFolderId = null;
-        let uploadedDriveFiles = [];
+let accessToken = null;
+let driveFolderId = null;
+let uploadedDriveFiles = [];
 
-        // Get DOM elements
-        const driveStatus = document.getElementById('drive-status');
-        const fileUploader = document.getElementById('file-uploader');
-        const previewContainer = document.getElementById('preview-container');
-        const progressContainer = document.getElementById('upload-progress-container');
-        const driveQrOutput = document.getElementById('drive-qr-output');
-        const generateDriveBtn = document.getElementById('generate-drive-qr-btn');
-        const uploadHelp = document.getElementById('upload-help');
+// DOM elements
+const driveStatus = document.getElementById('drive-status');
+const fileUploader = document.getElementById('file-uploader');
+const previewContainer = document.getElementById('preview-container');
+const progressContainer = document.getElementById('upload-progress-container');
+const driveQrOutput = document.getElementById('drive-qr-output');
+const generateDriveBtn = document.getElementById('generate-drive-qr-btn');
+const uploadHelp = document.getElementById('upload-help');
 
-        // ---------- Google OAuth 2.0 (implicit flow) ----------
-        function handleDriveLogin() {
-            driveStatus.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Connecting...`;
+// ─────────────────────────────────────────────
+//  UTILITIES
+// ─────────────────────────────────────────────
+function isObject(item) {
+    return item && typeof item === 'object' && !Array.isArray(item);
+}
 
-            const client = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: SCOPES,
-                callback: (response) => {
-                    if (response.access_token) {
-                        accessToken = response.access_token;
-                        sessionStorage.setItem("driveAccessToken", accessToken);
-                        driveStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Connected · token ready`;
-                        // Enable upload controls
-                        fileUploader.disabled = false;
-                        uploadHelp.innerHTML = '✅ Ready to upload files';
-                        // Create a folder for this session
-                        createDriveFolder();
-                    } else {
-                        driveStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Auth failed: ${response.error || 'unknown error'}`;
-                    }
-                },
-                error_callback: (error) => {
-                    driveStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Auth error: ${error.type}`;
-                    console.error('Auth error:', error);
-                }
-            });
-            client.requestAccessToken();
-        }
+async function safeFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP Error ${res.status}: ${text}`);
+    }
+    return res;
+}
 
-        // Create a folder "VenomQR_uploads" in Drive root
-        async function createDriveFolder() {
-            if (!accessToken) return;
+function generateId() {
+    return 'img_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+}
 
-            try {
-                // Search for existing folder
-                const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='VenomQR_uploads' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
+async function getUserInfo(token) {
+    const tokenInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`);
+    const tokenInfo = await tokenInfoRes.json();
+    if (!tokenInfoRes.ok) throw new Error(`Token invalid: ${tokenInfo.error_description || tokenInfo.error}`);
 
-                if (!searchRes.ok) {
-                    throw new Error(`Search failed: ${searchRes.status}`);
-                }
+    const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!userInfoRes.ok) throw new Error(`UserInfo failed (${userInfoRes.status})`);
+    return userInfoRes.json();
+}
 
-                const searchData = await searchRes.json();
+async function handleDriveLogin() {
+    driveStatus.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Connecting...`;
 
-                if (searchData.files && searchData.files.length > 0) {
-                    driveFolderId = searchData.files[0].id;
-                    driveStatus.innerHTML += `<br><span class="badge-success"><i class="fas fa-folder"></i> Using existing folder: ${driveFolderId}</span>`;
-                    // generateDriveBtn.disabled = false;
-                } else {
-                    // Create new folder
-                    const meta = {
-                        name: 'VenomQR_uploads',
-                        mimeType: 'application/vnd.google-apps.folder'
-                    };
-
-                    const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(meta)
-                    });
-
-                    if (!createRes.ok) {
-                        throw new Error(`Folder creation failed: ${createRes.status}`);
-                    }
-
-                    const folder = await createRes.json();
-                    driveFolderId = folder.id;
-                    driveStatus.innerHTML += `<br><span class="badge-success"><i class="fas fa-folder"></i> Created folder: ${driveFolderId}</span>`;
-                    // generateDriveBtn.disabled = false;
-                }
-            } catch (error) {
-                driveStatus.innerHTML += `<br><span class="text-danger"><i class="fas fa-exclamation-circle"></i> Folder error: ${error.message}</span>`;
-                console.error('Drive folder error:', error);
+    const client = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: async (response) => {
+            if (response.access_token) {
+                accessToken = response.access_token;
+                sessionStorage.setItem('driveAccessToken', accessToken);
+                await updateUI();
+                await createDriveFolder();
+            } else {
+                driveStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Auth failed: ${response.error || 'unknown error'}`;
             }
+        },
+        error_callback: (error) => {
+            driveStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> Auth error: ${error.type}`;
+            console.error('Auth error:', error);
+        }
+    });
+
+    client.requestAccessToken();
+}
+
+function handleDriveLogout() {
+    sessionStorage.removeItem('driveAccessToken');
+    sessionStorage.removeItem('driveFolderId');
+    accessToken = null;
+    driveFolderId = null;
+    uploadedDriveFiles = [];
+    updateUI();
+}
+
+// ─────────────────────────────────────────────
+//  UI STATE
+// ─────────────────────────────────────────────
+async function updateUI() {
+    const savedToken = sessionStorage.getItem('driveAccessToken');
+    const savedFolderId = sessionStorage.getItem('driveFolderId');
+    accessToken = savedToken || null;
+    driveFolderId = savedFolderId || null;
+
+    if (savedToken) {
+        try {
+            const userInfo = await getUserInfo(savedToken);
+
+            document.getElementById('gdrive-signin-btn').style.display = 'none';
+            document.getElementById('gdrive-signout-btn').style.display = 'block';
+            document.getElementById('user-info').style.display = 'block';
+            document.getElementById('user-name').textContent = `Logged in as: ${userInfo.name}`;
+            if (userInfo.picture) document.getElementById('profile-photo').src = userInfo.picture;
+
+            if (fileUploader) fileUploader.disabled = false;
+            if (uploadHelp) uploadHelp.textContent = '✅ Ready to upload files';
+            if (driveStatus) driveStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Connected`;
+
+            await renderHistory();
+        } catch (err) {
+            console.error('Invalid/expired token:', err);
+            sessionStorage.removeItem('driveAccessToken');
+            sessionStorage.removeItem('driveFolderId');
+            accessToken = null;
+            driveFolderId = null;
+            updateUI();
+        }
+    } else {
+        document.getElementById('user-info').style.display = 'none';
+        document.getElementById('gdrive-signin-btn').style.display = 'block';
+        document.getElementById('gdrive-signout-btn').style.display = 'none';
+        if (fileUploader) fileUploader.disabled = true;
+        if (uploadHelp) uploadHelp.textContent = '🔑 Please sign in to upload files';
+        if (driveStatus) driveStatus.innerHTML = '';
+    }
+}
+
+// ─────────────────────────────────────────────
+//  DRIVE FOLDER
+// ─────────────────────────────────────────────
+async function createDriveFolder() {
+    if (!accessToken) return;
+
+    // Restore from session first
+    const saved = sessionStorage.getItem('driveFolderId');
+    if (saved) {
+        driveFolderId = saved;
+        if (driveStatus) driveStatus.innerHTML += `<br><span class="badge-success"><i class="fas fa-folder"></i> Drive folder ready</span>`;
+        return;
+    }
+
+    try {
+        const searchRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=name='VenomQR_uploads' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (!searchRes.ok) throw new Error(`Search failed: ${searchRes.status}`);
+        const searchData = await searchRes.json();
+
+        if (searchData.files && searchData.files.length > 0) {
+            driveFolderId = searchData.files[0].id;
+        } else {
+            const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'VenomQR_uploads', mimeType: 'application/vnd.google-apps.folder' })
+            });
+            if (!createRes.ok) throw new Error(`Folder creation failed: ${createRes.status}`);
+            const folder = await createRes.json();
+            driveFolderId = folder.id;
         }
 
-        // ---------- FILE UPLOAD + PROGRESS + PREVIEW ----------
-        fileUploader.addEventListener('change', function (e) {
-            const files = Array.from(e.target.files);
-            files.forEach(file => {
-                addPreview(file);
-                uploadFileToDrive(file);
-            });
+        sessionStorage.setItem('driveFolderId', driveFolderId);
+        if (driveStatus) driveStatus.innerHTML += `<br><span class="badge-success"><i class="fas fa-folder"></i> Drive folder ready</span>`;
+    } catch (error) {
+        if (driveStatus) driveStatus.innerHTML += `<br><span class="text-danger"><i class="fas fa-exclamation-circle"></i> Folder error: ${error.message}</span>`;
+        console.error('Drive folder error:', error);
+    }
+}
+
+// ─────────────────────────────────────────────
+//  FILE UPLOAD + PREVIEW
+// ─────────────────────────────────────────────
+fileUploader.addEventListener('change', async function (e) {
+    const files = Array.from(e.target.files);
+    for (const file of files) {
+        addPreview(file);
+        await uploadFileToDrive(file, false);
+    }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+});
+
+function addPreview(file) {
+    const reader = new FileReader();
+    const card = document.createElement('div');
+    card.className = 'preview-card';
+    card.setAttribute('data-filename', file.name);
+
+    const safeName = file.name.replace(/'/g, "\\'");
+    const removeBtn = `<div class="remove-preview" onclick="removePreviewCard('${safeName}')"><i class="fas fa-times"></i></div>`;
+
+    if (file.type.startsWith('image/')) {
+        reader.onload = (e) => {
+            card.innerHTML = `<img src="${e.target.result}" alt="preview"><div class="file-name">${file.name}</div>${removeBtn}`;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+        reader.onload = (e) => {
+            card.innerHTML = `<video src="${e.target.result}" controls></video><div class="file-name">${file.name}</div>${removeBtn}`;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type === 'application/pdf') {
+        reader.onload = (e) => {
+            card.innerHTML = `<iframe src="${e.target.result}" style="background:white;"></iframe><div class="file-name">${file.name}</div>${removeBtn}`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        card.innerHTML = `<div style="height:110px;display:flex;align-items:center;justify-content:center;background:#111;border-radius:18px;"><i class="fas fa-file fa-2x"></i></div><div class="file-name">${file.name}</div>${removeBtn}`;
+    }
+
+    previewContainer.appendChild(card);
+}
+
+window.removePreviewCard = (filename) => {
+    document.querySelectorAll('.preview-card').forEach(c => {
+        if (c.getAttribute('data-filename') === filename) c.remove();
+    });
+    uploadedDriveFiles = uploadedDriveFiles.filter(f => f.name !== filename);
+    if (uploadedDriveFiles.length === 0 && generateDriveBtn) {
+        generateDriveBtn.disabled = true;
+    }
+};
+
+/**
+ * Upload a file to Google Drive.
+ * @param {File} file
+ * @param {boolean} isQR  - true = silent upload (QR PNG), false = show progress UI
+ * @returns {Promise<object>} Drive file detail
+ */
+function uploadFileToDrive(file, isQR = false) {
+    return new Promise((resolve, reject) => {
+        if (!accessToken || !driveFolderId) {
+            alert('Drive not properly connected. Please reconnect.');
+            return reject(new Error('Drive not connected'));
+        }
+
+        let progressDiv = null;
+        let progBar = null;
+
+        if (!isQR) {
+            const progressId = 'progress-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            progressDiv = document.createElement('div');
+            progressDiv.className = 'mb-2';
+            progressDiv.id = progressId;
+            progressDiv.innerHTML = `
+                <div class="small">${file.name}</div>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width:0%"></div>
+                </div>`;
+            progressContainer.appendChild(progressDiv);
+            progBar = progressDiv.querySelector('.progress-bar');
+        }
+
+        const metadata = { name: file.name, parents: [driveFolderId] };
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        formData.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable && progBar) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                progBar.style.width = pct + '%';
+                progBar.textContent = pct + '%';
+            }
         });
 
-        function addPreview(file) {
-            const reader = new FileReader();
-            const card = document.createElement('div');
-            card.className = 'preview-card';
-            card.setAttribute('data-filename', file.name);
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const fileData = JSON.parse(xhr.responseText);
 
-            const removeBtn = `<div class="remove-preview" onclick="removePreviewCard('${file.name.replace(/'/g, "\\'")}')"><i class="fas fa-times"></i></div>`;
+                // Fetch full detail then make it publicly readable
+                fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=id,name,webViewLink,mimeType`, {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                })
+                    .then(r => r.json())
+                    .then(detail => {
+                        return fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: 'reader', type: 'anyone' })
+                        }).then(() => detail);
+                    })
+                    .then(async (detail) => {
+                        const fileEntry = {
+                            name: detail.name,
+                            id: detail.id,
+                            webViewLink: detail.webViewLink || `https://drive.google.com/file/d/${detail.id}/view`,
+                            mimeType: detail.mimeType
+                        };
 
-            if (file.type.startsWith('image/')) {
-                reader.onload = (e) => {
-                    card.innerHTML = `<img src="${e.target.result}" alt="preview">` +
-                        `<div class="file-name">${file.name}</div>` + removeBtn;
-                };
-                reader.readAsDataURL(file);
-            } else if (file.type.startsWith('video/')) {
-                reader.onload = (e) => {
-                    card.innerHTML = `<video src="${e.target.result}" controls></video>` +
-                        `<div class="file-name">${file.name}</div>` + removeBtn;
-                };
-                reader.readAsDataURL(file);
-            } else if (file.type === 'application/pdf') {
-                reader.onload = (e) => {
-                    card.innerHTML = `<iframe src="${e.target.result}" style="background:white;"></iframe>` +
-                        `<div class="file-name">${file.name}</div>` + removeBtn;
-                };
-                reader.readAsDataURL(file);
+                        if (!isQR) {
+                            // Add to list and enable Generate QR button
+                            uploadedDriveFiles.push(fileEntry);
+                            if (progressDiv) progressDiv.innerHTML += `<div class="small text-success mt-1">✅ Uploaded to Drive</div>`;
+                            if (generateDriveBtn) generateDriveBtn.disabled = false;
+                        } else {
+                            // QR PNG uploaded — show success
+                            Swal.fire({
+                                title: 'Uploaded!',
+                                html: `QR Code uploaded! <br><a href="${detail.webViewLink}" target="_blank">View QR Code</a>`,
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
+
+                        resolve(fileEntry);
+                    })
+                    .catch(err => {
+                        if (!isQR && progressDiv) progressDiv.innerHTML += `<div class="small text-danger">⚠️ Uploaded but failed to get link</div>`;
+                        reject(err);
+                    });
             } else {
-                // fallback icon
-                card.innerHTML = `<div style="height:110px; display:flex; align-items:center; justify-content:center; background:#111;border-radius:18px;">
-                                <i class="fas fa-file fa-2x"></i>
-                             </div>` +
-                    `<div class="file-name">${file.name}</div>` + removeBtn;
-            }
-
-            previewContainer.appendChild(card);
-        }
-
-        window.removePreviewCard = (filename) => {
-            const cards = document.querySelectorAll('.preview-card');
-            cards.forEach(c => {
-                if (c.getAttribute('data-filename') === filename) {
-                    c.remove();
-                }
-            });
-            // Also remove from uploadedDriveFiles array
-            uploadedDriveFiles = uploadedDriveFiles.filter(f => f.name !== filename);
-
-            // Disable generate button if no files left
-            if (uploadedDriveFiles.length === 0) {
-                generateDriveBtn.disabled = true;
+                let msg = 'Upload failed';
+                try { msg = JSON.parse(xhr.responseText).error.message || msg; } catch (_) {}
+                if (!isQR && progressDiv) progressDiv.innerHTML += `<div class="small text-danger">❌ ${msg}</div>`;
+                reject(new Error(msg));
             }
         };
 
-        async function uploadFileToDrive(file) {
-            if (!accessToken || !driveFolderId) {
-                alert('Drive not properly connected. Please reconnect.');
-                return;
-            }
+        xhr.onerror = function () {
+            if (!isQR && progressDiv) progressDiv.innerHTML += `<div class="small text-danger">❌ Network error</div>`;
+            reject(new Error('Network error'));
+        };
 
-            // Create progress bar
-            const progressId = 'progress-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-            const progressDiv = document.createElement('div');
-            progressDiv.className = 'mb-2';
-            progressDiv.id = progressId;
-            progressDiv.innerHTML = `<div class="small">${file.name}</div>
-                                 <div class="progress">
-                                     <div class="progress-bar" role="progressbar" style="width:0%"></div>
-                                 </div>`;
-            progressContainer.appendChild(progressDiv);
-            const progBar = progressDiv.querySelector('.progress-bar');
+        xhr.send(formData);
+    });
+}
 
-            // Create metadata
-            const metadata = {
-                name: file.name,
-                parents: [driveFolderId]
-            };
+// ─────────────────────────────────────────────
+//  JSON DATA FILE (data.json in Drive folder)
+// ─────────────────────────────────────────────
+function appendData(existingData, newImage) {
+    if (!existingData || typeof existingData !== 'object') existingData = {};
+    if (!Array.isArray(existingData.images)) existingData.images = [];
 
-            // Use fetch with XHR for progress tracking
-            const formData = new FormData();
-            formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            formData.append('file', file);
+    // Guard against accidentally nesting
+    if (newImage.images) {
+        console.warn('Wrong data format detected, fixing...');
+        newImage = newImage.images[0];
+    }
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
-            xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+    existingData.images.push({
+        id: newImage.id || generateId(),
+        caption: newImage.caption || '',
+        qrURL: newImage.qrURL || '',
+        fileId: newImage.fileId || '',
+        fileName: newImage.fileName || '',
+        fileURL: newImage.fileURL || '',
+        created: new Date().toDateString()
+    });
 
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    progBar.style.width = percent + '%';
-                    progBar.textContent = percent + '%';
-                }
-            });
+    return existingData;
+}
 
-            xhr.onload = function () {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    const fileData = JSON.parse(xhr.responseText);
+async function upsertJsonFile(folderId, fileName, data = {}) {
+    const token = sessionStorage.getItem('driveAccessToken');
+    if (!token) throw new Error('No Drive access token found');
+    if (!isObject(data)) throw new Error('Data must be a valid object');
 
-                    // Get webViewLink
-                    fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=id,name,webViewLink,mimeType`, {
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                        .then(r => r.json())
-                        .then(detail => {
+    const query = `'${folderId}' in parents and name='${fileName}' and mimeType='application/json' and trashed=false`;
+    const findResponse = await safeFetch(
+        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const findData = await findResponse.json();
 
-
-                            // Make Public
-                            fetch(
-                                `https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`,
-                                {
-                                    method: "POST",
-                                    headers: {
-                                        Authorization: "Bearer " + accessToken,
-                                        "Content-Type": "application/json"
-                                    },
-                                    body: JSON.stringify({
-                                        role: "reader",
-                                        type: "anyone"
-                                    })
-                                }
-                            )
-                                .then(() => {
-                                    uploadedDriveFiles.push({
-                                        name: detail.name,
-                                        id: detail.id,
-                                        webViewLink: detail.webViewLink || `https://drive.google.com/file/d/${detail.id}/view`,
-                                        mimeType: detail.mimeType
-                                    });
-
-                                    progressDiv.innerHTML += `<div class="small text-success mt-1">✅ Uploaded to Drive</div>`;
-
-                                    if (uploadedDriveFiles.map(f => f.webViewLink).includes(detail.webViewLink)) {
-                                        generateDriveBtn.disabled = false;
-                                    }
-                                })
-                                .catch(err => {
-                                    progressDiv.innerHTML += `<div class="small text-danger">⚠️ Uploaded but failed to get link</div>`;
-                                });
-                        })
-                } else {
-                    let errorMsg = 'Upload failed';
-                    try {
-                        const error = JSON.parse(xhr.responseText);
-                        errorMsg = error.error.message || errorMsg;
-                    } catch (e) { }
-                    progressDiv.innerHTML += `<div class="small text-danger">❌ ${errorMsg}</div>`;
-                }
-            };
-
-            xhr.onerror = function () {
-                progressDiv.innerHTML += `<div class="small text-danger">❌ Network error</div>`;
-            };
-
-            xhr.send(formData);
+    if (findData.files && findData.files.length > 0) {
+        const fileId = findData.files[0].id;
+        let currentData = {};
+        try {
+            const getResponse = await safeFetch(
+                `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const text = await getResponse.text();
+            currentData = text ? JSON.parse(text) : {};
+        } catch (_) {
+            currentData = {};
         }
 
-        // Generate QR that links to uploaded files
-        function generateDriveFileQR() {
-
-            if (!uploadedDriveFiles.length) {
-                alert('No files uploaded yet.');
-                return;
+        const updatedData = appendData(currentData, data);
+        const updateResponse = await safeFetch(
+            `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+            {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData, null, 2)
             }
+        );
+        return updateResponse.json();
+    } else {
+        const metadata = { name: fileName, mimeType: 'application/json', parents: [folderId] };
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([JSON.stringify(appendData({}, data), null, 2)], { type: 'application/json' }));
 
-            // Build links string
-            let linksString = uploadedDriveFiles.map(f => f.webViewLink).join("\n");
-            const caption = document.getElementById('caption').value;
+        const createResponse = await safeFetch(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
+            { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form }
+        );
+        return createResponse.json();
+    }
+}
 
-            const qrSize = 450;
+async function getJsonFile(folderId, fileName) {
+    const token = sessionStorage.getItem('driveAccessToken');
+    if (!token) return { images: [] }; // Not logged in — return empty gracefully
 
-            const qrUrl = `https://quickchart.io/qr?ecLevel=Q&text=${encodeURIComponent(linksString)}&caption=${encodeURIComponent(caption)}&captionFontSize=18&size=${qrSize}`;
+    try {
+        const query = `'${folderId}' in parents and name='${fileName}' and mimeType='application/json' and trashed=false`;
+        const findResponse = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const findData = await findResponse.json();
 
-            const img = new Image();
-            img.src = qrUrl;
-            img.alt = 'QR code for Drive files';
+        if (!findData.files || findData.files.length === 0) return { images: [] }; // No file yet
 
-            driveQrOutput.innerHTML = "";
+        const fileId = findData.files[0].id;
+        const contentResponse = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const text = await contentResponse.text();
+        const parsed = text ? JSON.parse(text) : {};
+        if (!Array.isArray(parsed.images)) parsed.images = [];
+        return parsed;
+    } catch (err) {
+        console.error('getJsonFile error:', err);
+        return { images: [] };
+    }
+}
 
-            // Layout
-            driveQrOutput.style.display = "flex";
-            driveQrOutput.style.flexDirection = "column";
-            driveQrOutput.style.alignItems = "center";
-            driveQrOutput.style.gap = "20px";
+// ─────────────────────────────────────────────
+//  HISTORY
+// ─────────────────────────────────────────────
+// Single source of truth — never push to this from outside renderHistory
+let currentHistoryImages = [];
+async function renderHistory() {
+    const folderId = sessionStorage.getItem('driveFolderId');
+    if (!folderId) return;
 
-            img.style.maxWidth = "300px";
-            img.classList.add("img-fluid");
+    const data = await getJsonFile(folderId, 'data.json');
+    currentHistoryImages = Array.isArray(data.images) ? data.images : [];
 
-            driveQrOutput.appendChild(img);
+    const list = document.getElementById('qr-history-list');
+    if (!list) return;
 
-            // ✅ REAL DOWNLOAD BUTTON (Fixed)
-            const downloadBtn = document.createElement("button");
-            downloadBtn.className = "btn btn-danger";
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download QR';
+    if (!currentHistoryImages.length) {
+        list.innerHTML = '<p class="text-muted small">No history yet.</p>';
+        return;
+    }
 
-            downloadBtn.addEventListener("click", async () => {
-                try {
-                    const response = await fetch(qrUrl);
-                    const blob = await response.blob();
-                    const blobURL = URL.createObjectURL(blob);
+   list.innerHTML = [...currentHistoryImages]
+    .sort((a, b) => new Date(b.created) - new Date(a.created)) // newest first
+    .map((item, i) => `
+        <div class="history-item" id="history-${i}"  onclick="previewQR(${i})">
+            <div class="history-thumb" style="cursor:pointer;">
+                <img src="${item.qrURL}" alt="QR thumbnail">
+            </div>
+            <div class="history-meta">
+                <div class="h-label">${item.caption || '(no caption)'}</div>
+                <div class="h-date"><i class="fas fa-clock" style="font-size:.6rem;"></i> ${item.created}</div>
+                <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteHistoryItem(${i})" style="margin-top:5px;">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
 
-                    const a = document.createElement("a");
-                    a.href = blobURL;
-                    a.download = "drive-qr.png";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+async function deleteHistoryItem(index) {
+    if (!currentHistoryImages[index]) return;
 
-                    URL.revokeObjectURL(blobURL);
-                } catch (err) {
-                    alert("Download failed!");
-                    console.error(err);
-                }
-            });
+    // Step 1: Show confirmation alert
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you really want to delete this item? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+    });
 
-            driveQrOutput.appendChild(downloadBtn);
+    if (!result.isConfirmed) return; // User canceled deletion
 
-            // File summary
-            const summary = document.createElement("div");
-            summary.className = "small text-white-50";
-            summary.innerHTML = `QR contains ${uploadedDriveFiles.length} file link(s)`;
+    // Step 2: Remove from local array
+    currentHistoryImages.splice(index, 1);
 
-            driveQrOutput.appendChild(summary);
-        }
-        // ---------- preserve original createQR for text tab ----------
-        function createQR() {
-            const data = document.getElementById("input-data").value.trim();
-            const caption = document.getElementById("input-caption").value.trim();
-            const output = document.getElementById("qr-output");
+    // Step 3: Show deleting/loading alert
+    Swal.fire({
+        title: 'Deleting...',
+        text: 'Please wait...',
+        icon: 'info',
+        showCancelButton: false,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
 
-            if (data === "") {
-                output.innerHTML = "<p style='color:red;text-align:center;'>Enter some text first!</p>";
-                return;
-            }
+    try {
+        const folderId = sessionStorage.getItem('driveFolderId');
+        const token = sessionStorage.getItem('driveAccessToken');
+        if (!folderId || !token) throw new Error('Missing Drive info');
 
-            output.innerHTML = "";
+        const query = `'${folderId}' in parents and name='data.json' and mimeType='application/json' and trashed=false`;
+        const fileRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const fileData = await fileRes.json();
+        const fileId = fileData.files && fileData.files[0] ? fileData.files[0].id : null;
+        if (!fileId) throw new Error('data.json not found on Drive');
 
-            const qrSize = 450;
-            const qrURL = "https://quickchart.io/qr?ecLevel=Q&" +
-                "text=" + encodeURIComponent(data) +
-                "&caption=" + encodeURIComponent(caption) +
-                "&captionFontSize=20" +
-                "&size=" + qrSize;
-
-            const img = new Image();
-            img.src = qrURL;
-
-            img.onload = () => {
-                output.innerHTML = "";
-
-                output.style.display = "flex";
-                output.style.flexDirection = "column";
-                output.style.alignItems = "center";
-                output.style.gap = "20px";
-
-                img.style.maxWidth = "250px";
-                img.classList.add("img-fluid");
-
-                output.appendChild(img);
-
-                const downloadBtn = document.createElement("button");
-                downloadBtn.className = "btn btn-danger";
-                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download QR';
-
-                downloadBtn.addEventListener("click", async () => {
-                    const response = await fetch(qrURL);
-                    const blob = await response.blob();
-                    const blobURL = window.URL.createObjectURL(blob);
-
-                    const a = document.createElement("a");
-                    a.href = blobURL;
-                    a.download = "qr.png";
-                    document.body.appendChild(a);
-                    a.click();
-
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(blobURL);
-                });
-
-                output.appendChild(downloadBtn);
-            };
-
-            img.onerror = () => {
-                output.innerHTML = "<p style='color:red;text-align:center;'>Failed to load QR.</p>";
-            };
-        }
-
-        // Tab switching logic
-        const tabs = document.querySelectorAll("#qr-tabs .nav-link");
-        const sections = document.querySelectorAll(".tab-content-section");
-
-        tabs.forEach(tab => {
-            tab.addEventListener("click", () => {
-                tabs.forEach(t => t.classList.remove("active"));
-                sections.forEach(s => s.style.display = "none");
-                tab.classList.add("active");
-                document.querySelector(tab.dataset.target).style.display = "block";
-            });
+        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ images: currentHistoryImages })
         });
 
-        // Initialize AOS
-        AOS.init();
+        Swal.close();
+        await renderHistory();
+    } catch (err) {
+        Swal.close();
+        console.error('Failed to update Drive after delete:', err);
+        Swal.fire({ title: 'Error', text: 'Failed to delete item from Drive.', icon: 'error' });
+    }
+}
 
-        // Expose functions globally
-        window.createQR = createQR;
-        window.handleDriveLogin = handleDriveLogin;
-        window.generateDriveFileQR = generateDriveFileQR;
-        window.removePreviewCard = removePreviewCard;
-        // Restore session
-        window.addEventListener("load", () => {
-            const savedToken = sessionStorage.getItem("driveAccessToken");
-            if (savedToken) {
-                accessToken = savedToken;
-                driveStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Session restored`;
-                fileUploader.disabled = false;
-                uploadHelp.innerHTML = '✅ Ready to upload files';
-                createDriveFolder();
-            }
+function previewQR(i) {
+    const item = currentHistoryImages[i];
+    if (!item) return;
+
+    Swal.fire({
+    html: `
+      <p><small>Caption:</small> ${item.caption || '(no caption)'}</p>
+      <p><small>Created:</small> ${item.created}</p>
+
+      ${item.fileURL ? `
+        <p>
+          <small>File:</small> 
+          <a href="${item.fileURL}" target="_blank">${item.fileURL}</a>
+        </p>
+        <p>
+          <small>Extension:</small> 
+          ${item.fileName 
+            ? item.fileName.split('.').pop().toLowerCase() 
+            : 'unknown'}
+        </p>
+      ` : ''}
+    `,
+
+    imageUrl: item.qrURL,
+    imageWidth: 220,
+    background: '#1a2530',
+    color: '#fff',
+    confirmButtonColor: '#e63946',
+    confirmButtonText: 'Close',
+    showCancelButton: true,
+    cancelButtonText: 'Download QR Code',
+    cancelButtonColor: '#333'
+}).then(async (r) => {
+    if (r.isDismissed && r.dismiss === Swal.DismissReason.cancel) {
+        try {
+            const response = await fetch(item.qrURL, { mode: 'cors' });
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (item.caption || 'qr') + '_qr.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download failed', err);
+            alert('Failed to download image.');
+        }
+    }
+});
+}
+
+// ─────────────────────────────────────────────
+//  QR GENERATION — TEXT TAB
+// ─────────────────────────────────────────────
+async function createQR() {
+    const inputData = document.getElementById('input-data').value.trim();
+    const caption = document.getElementById('input-caption').value.trim();
+    const output = document.getElementById('qr-output');
+
+    if (!inputData) {
+        output.innerHTML = "<p style='color:red;text-align:center;'>Enter some text first!</p>";
+        return;
+    }
+
+    const qrSize = 450;
+    const qrURL = `https://quickchart.io/qr?ecLevel=Q&text=${encodeURIComponent(inputData)}&caption=${encodeURIComponent(caption)}&captionFontSize=20&size=${qrSize}`;
+
+    output.innerHTML = '';
+
+    const img = new Image();
+    img.src = qrURL;
+
+    if (accessToken && driveFolderId) {
+        Swal.fire({
+            title: 'Generating QR Code...',
+            text: 'Please wait...',
+            icon: 'info',
+            showCancelButton: false,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
-        function handleDriveLogout() {
-            sessionStorage.removeItem("driveAccessToken");
-            driveStatus.innerHTML = `<i class="fas fa-info-circle"></i> Not connected`;
-            fileUploader.disabled = true;
-            uploadHelp.innerHTML = 'Connect to Google Drive first to enable uploads';
-        } 
-    </script>
+    }
+
+    img.onload = async () => {
+        // Save to Drive data.json
+        if (accessToken && driveFolderId) {
+            try {
+                await upsertJsonFile(driveFolderId, 'data.json', { caption, qrURL });
+                Swal.close();
+                await renderHistory();
+            } catch (err) {
+                Swal.close();
+                console.error('Failed to save QR to Drive:', err);
+            }
+        }
+
+        // Render QR
+        output.style.display = 'flex';
+        output.style.flexDirection = 'column';
+        output.style.alignItems = 'center';
+        output.style.gap = '20px';
+
+        img.style.maxWidth = '250px';
+        img.classList.add('img-fluid');
+        output.appendChild(img);
+
+        // Download button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn btn-danger';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download QR';
+        downloadBtn.addEventListener('click', async () => {
+            const blob = await (await fetch(qrURL)).blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (caption || 'qr') + '_qr.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+        output.appendChild(downloadBtn);
+
+        // Upload to Drive button (only if signed in)
+        // if (accessToken) {
+        //     const uploadBtn = document.createElement('button');
+        //     uploadBtn.className = 'btn btn-primary';
+        //     uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload QR to Drive';
+        //     uploadBtn.addEventListener('click', async () => {
+        //         const blob = await (await fetch(qrURL)).blob();
+        //         const file = new File([blob], (caption || 'qr') + '_qr.png', { type: 'image/png' });
+        //         Swal.fire({ title: 'Uploading...', text: 'Please wait...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        //         try {
+        //             await uploadFileToDrive(file, true);
+        //         } catch (err) {
+        //             Swal.close();
+        //             Swal.fire({ title: 'Error', text: 'Upload failed.', icon: 'error' });
+        //         }
+        //     });
+        //     output.appendChild(uploadBtn);
+        // }
+    };
+
+    img.onerror = () => {
+        output.innerHTML = "<p style='color:red;text-align:center;'>Failed to load QR.</p>";
+        Swal.close();
+    };
+}
+
+// ─────────────────────────────────────────────
+//  QR GENERATION — DRIVE FILES TAB
+// ─────────────────────────────────────────────
+async function generateDriveFileQR() {
+    if (!uploadedDriveFiles.length) {
+        alert('No files uploaded yet.');
+        return;
+    }
+
+    const caption = document.getElementById('caption').value.trim();
+    const linksString = uploadedDriveFiles.map(f => f.webViewLink).join('\n');
+    const qrSize = 450;
+    const qrUrl = `https://quickchart.io/qr?ecLevel=Q&text=${encodeURIComponent(linksString)}&caption=${encodeURIComponent(caption)}&captionFontSize=18&size=${qrSize}`;
+
+    driveQrOutput.innerHTML = '';
+    driveQrOutput.style.display = 'flex';
+    driveQrOutput.style.flexDirection = 'column';
+    driveQrOutput.style.alignItems = 'center';
+    driveQrOutput.style.gap = '20px';
+
+    const img = new Image();
+    img.src = qrUrl;
+    img.alt = 'QR code for Drive files';
+    img.style.maxWidth = '300px';
+    img.classList.add('img-fluid');
+
+    img.onload = async () => {
+        driveQrOutput.appendChild(img);
+
+        // Save to data.json
+        if (accessToken && driveFolderId) {
+            try {
+                const newRecord = {
+                    caption,
+                    qrURL: qrUrl,
+                    fileId: uploadedDriveFiles.map(f => f.id).join(','),
+                    fileName: uploadedDriveFiles.map(f => f.name).join(', '),
+                    fileURL: uploadedDriveFiles.map(f => f.webViewLink).join('\n')
+                };
+                await upsertJsonFile(driveFolderId, 'data.json', newRecord);
+                await renderHistory();
+            } catch (err) {
+                console.error('Failed to save QR record:', err);
+            }
+        }
+
+        // Download button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn btn-danger';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download QR';
+        downloadBtn.addEventListener('click', async () => {
+            const blob = await (await fetch(qrUrl)).blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (caption || 'drive') + '_qr.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+        driveQrOutput.appendChild(downloadBtn);
+
+        const summary = document.createElement('div');
+        summary.className = 'small text-white-50';
+        summary.textContent = `QR contains ${uploadedDriveFiles.length} file link(s)`;
+        driveQrOutput.appendChild(summary);
+    };
+
+    img.onerror = () => {
+        driveQrOutput.innerHTML = "<p style='color:red;'>Failed to generate QR.</p>";
+    };
+}
+
+///----------------------------------------------
+// change logs alert
+///----------------------------------------------
+function changeLogs() {
+    Swal.fire({
+        title: 'Change Logs',
+        text: 'Version 2.0',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        backdrop: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        html: `
+            <div class="text-start">
+                <h5 class="text-primary">What's New in Version 2.0:</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>File Preview:</strong> Preview your uploaded files before generating the QR code.</li>
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>File Management:</strong> View and manage your uploaded files in the history section.</li>
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>Data Storage:</strong> All your data is securely saved in Google Drive.</li>
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>No Expiry Date:</strong> Your QR code will never expire.</li>
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>No Ads:</strong> No Ads will be displayed in the QR code.</li>
+
+                </ul>
+
+                <h5 class="text-primary">Upcoming Features:</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>Scan Tracking:</strong> Track how many times each QR code has been scanned.</li>
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>Add Logo:</strong> Add logo to your QR code.</li>
+                    <li><i class="fas fa-check-circle text-success"></i> <strong>QR Customization:</strong> Customize colors, patterns, and more.</li>
+
+
+
+                </ul>
+
+
+            </div>
+        `,
+        footer: '<a href="https://docs.google.com/forms/d/e/1FAIpQLSd_PR7-fPBD4--YKW7s0f4wN7DOOW7vKrHf7ZyzXyHNdvbs5A/viewform" target="_blank"> Click here to give your Feedback</a>'
+    });
+}
+
+if (localStorage.getItem('changeLogsShown') !== 'true') {
+    changeLogs();
+    localStorage.setItem('changeLogsShown', 'true');
+}
+
+// ─────────────────────────────────────────────
+//  feedback alert
+// ─────────────────────────────────────────────
+function feedback() {
+    // Check if feedback popup has already been shown
+    if (localStorage.getItem('feedbackShown')) {
+        return; // Stop showing if already shown
+    }
+
+    Swal.fire({
+        title: 'We Value Your Feedback!',
+        html: `
+            <p>Your thoughts help us improve this service. Please take a moment to share your feedback.</p>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSd_PR7-fPBD4--YKW7s0f4wN7DOOW7vKrHf7ZyzXyHNdvbs5A/viewform" 
+               target="_blank" 
+               style="
+                   display: inline-block; 
+                   padding: 10px 20px; 
+                   margin-top: 10px; 
+                   background-color: #3085d6; 
+                   color: white; 
+                   text-decoration: none; 
+                   border-radius: 5px;
+                   font-weight: bold;
+               ">
+               Give Feedback
+            </a>
+        `,
+        icon: 'info',
+        confirmButtonText: 'Close',
+        didClose: () => {
+            // Mark as shown so it won't appear again
+            localStorage.setItem('feedbackShown', 'true');
+        }
+    });
+}
+feedback();
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+const tabs = document.querySelectorAll('#qr-tabs .nav-link');
+const sections = document.querySelectorAll('.tab-content-section');
+
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        sections.forEach(s => s.style.display = 'none');
+        tab.classList.add('active');
+        document.querySelector(tab.dataset.target).style.display = 'block';
+    });
+});
+
+// ─────────────────────────────────────────────
+//  BUTTON EVENT LISTENERS
+// ─────────────────────────────────────────────
+document.getElementById('gdrive-signin-btn').addEventListener('click', handleDriveLogin);
+document.getElementById('gdrive-signout-btn').addEventListener('click', handleDriveLogout);
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+if (typeof AOS !== 'undefined') AOS.init();
+
+window.addEventListener('load', updateUI);
+
+// Expose to inline HTML onclick handlers
+window.createQR = createQR;
+window.handleDriveLogin = handleDriveLogin;
+window.handleDriveLogout = handleDriveLogout;
+window.generateDriveFileQR = generateDriveFileQR;
+window.removePreviewCard = removePreviewCard;
+window.deleteHistoryItem = deleteHistoryItem;
+window.previewQR = previewQR;</script>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
