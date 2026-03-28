@@ -696,7 +696,7 @@ async function createDriveFolder() {
     const saved = sessionStorage.getItem('driveFolderId');
     if (saved) {
         driveFolderId = saved;
-        if (driveStatus) driveStatus.innerHTML += `<br><span class="badge-success"><i class="fas fa-folder"></i> Drive folder ready</span>`;
+        if (driveStatus) driveStatus.innerHTML += `<br><span class="badge-success w-100"><i class="fas fa-folder"></i> Drive folder ready</span>`;
         return;
     }
 
