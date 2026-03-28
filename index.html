@@ -1323,10 +1323,7 @@ function changeLogs() {
     });
 }
 
-if (localStorage.getItem('changeLogsShown') !== 'true') {
-    changeLogs();
-    localStorage.setItem('changeLogsShown', 'true');
-}
+
 
 // ─────────────────────────────────────────────
 //  feedback alert
@@ -1364,7 +1361,12 @@ function feedback() {
         }
     });
 }
-feedback();
+if (localStorage.getItem('changeLogsShown') !== 'true') {
+    changeLogs();
+    localStorage.setItem('changeLogsShown', 'true');
+} else {
+    feedback();
+}
 // ─────────────────────────────────────────────
 //  TABS
 // ─────────────────────────────────────────────
