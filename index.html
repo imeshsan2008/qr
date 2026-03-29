@@ -488,6 +488,7 @@
         <div class="qr-wrapper qr-main" data-aos="fade-up" data-aos-duration="1000">
             <div
                 style="text-align: center; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <center><img src="assest/img/icon-192.png" alt="" srcset="" height="100px" width="100px" style="border-radius: 50%;"></center>
                 <span class="qr-title text-center">VenomQR <span style="color:var(--primary);">Studio V2.0</span></span>
             </div>
 
@@ -505,7 +506,11 @@
                     <button class="nav-link" data-target="#tab-scan"><i class="fas fa-qrcode"></i>
                         Scan QR Code</button>
                 </li> -->
-            </ul>
+     <li class="nav-item">
+                    <button class="nav-link" data-target="#tab-wifi"><i class="fas fa-wifi"></i>
+                        Wifi QR Code</button>
+                </li>     
+                 </ul>
 
             <!-- TEXT / URL TAB -->
             <div id="tab-text" class="tab-content-section mt-4">
@@ -532,11 +537,11 @@
 
                 <div id="upload-progress-container" class="my-2"></div>
                 <div id="preview-container" class="preview-grid"></div>
-
+<!-- 
                 <button class="btn-main mt-4 btn-gen" id="generate-drive-qr-btn" onclick="generateDriveFileQR()"
                     disabled>
                     <i class="fas fa-link"></i> Generate QR for uploaded files
-                </button>
+                </button> -->
                 <div id="drive-qr-output" class="text-center mt-3"></div>
             </div>
 
@@ -555,17 +560,38 @@
                 </div>
             </div>
 
+ <!-- Wifi TAB -->
+            <div id="tab-wifi" class="tab-content-section mt-4" style="display:none;">
+                <label class="input-label">Wifi Name (SSID)</label>
+                <input type="text" id="input-wifi-name" class="form-control mb-3" placeholder="Wifi Name" >
+
+                <label class="input-label">Password</label>
+                <input type="text" id="input-wifi-password" class="form-control mb-3" placeholder="Password">
+
+                <label class="input-label">Caption</label>
+                <input type="text" id="input-wifi-caption" value="Scan to connect to Wifi" class="form-control mb-3" placeholder="Caption">
+
+                <label class="input-label">Encryption Type</label>
+                <select id="input-wifi-encryption" class="form-control mb-3">
+                    <option value="WPA/WPA2">WPA/WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">No Password</option>
+                </select>
+
+                <button class="btn-main mt-2" onclick="generateWifiQR()"><i class="fas fa-qrcode"></i> Generate QR
+                    Code</button>
+                <div id="wifi-qr-output" class="text-center mt-3"></div>
+            </div>
             <div class="footer">
                 Developed by <a href="https://imeshsan2008.github.io" class="text-danger text-decoration-none">Dark
                     Venom</a><br>
                     <a href="https://docs.google.com/forms/d/e/1FAIpQLSd_PR7-fPBD4--YKW7s0f4wN7DOOW7vKrHf7ZyzXyHNdvbs5A/viewform" target="_blank" class="text-warning text-decoration-none"> Give Feedback</a>
             </div>
         </div>
-
         <!-- History (right) -->
         <div class="qr-wrapper qr-history" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100">
             <div class="history-title">
-                <i class="fas fa-history"></i> QR History
+                <i class="fas fa-history"></i> QR History <span style="color:var(--primary);" id="history-count"></span>
             </div>
             <div id="qr-history-list">
 
@@ -691,7 +717,10 @@ async function updateUI() {
             if (uploadHelp) uploadHelp.textContent = '✅ Ready to upload files';
             if (driveStatus) driveStatus.innerHTML = `<i class="fas fa-check-circle text-success"></i> Connected`;
 
-            await renderHistory();
+
+            setTimeout(() => {
+                renderHistory();
+            }, 1000);
         } catch (err) {
             console.error('Invalid/expired token:', err);
             sessionStorage.removeItem('driveAccessToken');
@@ -800,6 +829,8 @@ function addPreview(file) {
 window.removePreviewCard = (filename) => {
     document.querySelectorAll('.preview-card').forEach(c => {
         if (c.getAttribute('data-filename') === filename) c.remove();
+        fileUploader.value = '';
+        document.getElementById('upload-progress-container').style.display = 'none';        
     });
     uploadedDriveFiles = uploadedDriveFiles.filter(f => f.name !== filename);
     if (uploadedDriveFiles.length === 0 && generateDriveBtn) {
@@ -882,6 +913,8 @@ function uploadFileToDrive(file, isQR = false) {
                             // Add to list and enable Generate QR button
                             uploadedDriveFiles.push(fileEntry);
                             if (progressDiv) progressDiv.innerHTML += `<div class="small text-success mt-1">✅ Uploaded to Drive</div>`;
+                           await generateDriveFileQR();
+
                             if (generateDriveBtn) generateDriveBtn.disabled = false;
                         } else {
                             // QR PNG uploaded — show success
@@ -933,6 +966,9 @@ function appendData(existingData, newImage) {
     existingData.images.push({
         id: newImage.id || generateId(),
         caption: newImage.caption || '',
+        ssid: newImage.ssid || '',
+        password: newImage.password || '',
+        encryption: newImage.encryption || '',
         qrURL: newImage.qrURL || '',
         fileId: newImage.fileId || '',
         fileName: newImage.fileName || '',
@@ -1036,9 +1072,10 @@ async function renderHistory() {
 
     const list = document.getElementById('qr-history-list');
     if (!list) return;
+    document.getElementById('history-count').innerText = `(${currentHistoryImages.length})`;
 
     if (!currentHistoryImages.length) {
-        list.innerHTML = '<p class="text-muted small">No history yet.</p>';
+        list.innerHTML = '<p class="text-white small">No history yet.</p>';
         return;
     }
 
@@ -1050,8 +1087,23 @@ async function renderHistory() {
                 <img src="${item.qrURL}" alt="QR thumbnail">
             </div>
             <div class="history-meta">
-                <div class="h-label">${item.caption || '(no caption)'}</div>
-                <div class="h-date"><i class="fas fa-clock" style="font-size:.6rem;"></i> ${item.created}</div>
+                                ${item.ssid ? ` <div class="h-label"><i class="fas fa-wifi"></i>&nbsp;&nbsp;&nbsp;<small>Wifi QR</small></div>` : ''}
+                                ${item.fileURL ? ` <div class="h-label"><i class="fas fa-file"></i>&nbsp;&nbsp;&nbsp;<small>File QR</small></div>` : ''}
+                                ${item.url ? ` <div class="h-label"><i class="fas fa-link"></i>&nbsp;&nbsp;&nbsp;<small>URL/Text QR</small></div>` : ''}
+
+<div class="h-label" title="${item.ssid ? `SSID: ${item.ssid}`:'' || item.fileURL ? `File: ${item.fileName}`:'' || item.url ? `URL: ${item.url}`:'' || item.caption || '(no caption)'}">
+  ${
+    item.ssid
+      ? `SSID: ${item.ssid}`
+      : [
+          item.fileURL && `File: ${item.fileName}`,
+          item.url && `URL: ${item.url}`,
+          item.caption || '(no caption)'
+        ]
+        .filter(Boolean)
+        .join(' | ')
+  }
+</div>                <div class="h-date"><i class="fas fa-clock" style="font-size:.6rem;"></i> ${item.created}</div>
                 <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteHistoryItem(${i})" style="margin-top:5px;">Delete</button>
             </div>
         </div>
@@ -1121,7 +1173,10 @@ function previewQR(i) {
 
     Swal.fire({
     html: `
-      <p><small>Caption:</small> ${item.caption || '(no caption)'}</p>
+     ${item.ssid ? `<p><small>Caption:</small> ${item.caption || '(no caption)'}</p>` : ''}
+   ${item.ssid ? `<p><small>SSID:</small> ${item.ssid}</p>` : ''}
+   ${item.password ? `<p><small>Password:</small> ${item.password}</p>` : ''}
+   ${item.encryption ? `<p><small>Encryption:</small> ${item.encryption}</p>` : ''}
       <p><small>Created:</small> ${item.created}</p>
 
       ${item.fileURL ? `
@@ -1174,6 +1229,7 @@ function previewQR(i) {
 //  QR GENERATION — TEXT TAB
 // ─────────────────────────────────────────────
 async function createQR() {
+    
     const inputData = document.getElementById('input-data').value.trim();
     const caption = document.getElementById('input-caption').value.trim();
     const output = document.getElementById('qr-output');
@@ -1289,7 +1345,7 @@ async function generateDriveFileQR() {
     const img = new Image();
     img.src = qrUrl;
     img.alt = 'QR code for Drive files';
-    img.style.maxWidth = '300px';
+    img.style.maxWidth = '250px';
     img.classList.add('img-fluid');
 
     img.onload = async () => {
@@ -1380,7 +1436,81 @@ function changeLogs() {
     });
 }
 
+// ─────────────────────────────────────────────
+//  QR GENERATION — Wifi TAB
+// ─────────────────────────────────────────────
+async function generateWifiQR(){
+    let qrCodeUrl;
+    const ssid = document.getElementById('input-wifi-name').value;
+    const password = document.getElementById('input-wifi-password').value;
+    const encryption = document.getElementById('input-wifi-encryption').value;
+    const qrOutput = document.getElementById('wifi-qr-output');
+    const caption = document.getElementById('input-wifi-caption').value;
+    
+    if (!ssid || !password || !encryption) {
+        alert('Please fill in all the fields');
+        return;
+    }    
+    qrOutput.innerHTML = '';
+    qrOutput.style.display = 'flex';
+    qrOutput.style.flexDirection = 'column';
+    qrOutput.style.alignItems = 'center';
+    qrOutput.style.gap = '20px';
 
+      // Download button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn btn-danger';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download QR';
+        downloadBtn.addEventListener('click', async () => {
+            const blob = await (await fetch(qrCodeUrl)).blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (ssid || 'wifi') + '_qr.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    const wifiData = `WIFI:S:${ssid};T:${encryption};P:${password};;`;
+    
+    qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(wifiData)}&caption=${encodeURIComponent(caption)}&size=450&captionFontSize=15`;
+
+    
+    if (qrCodeUrl) {
+    
+         // Save to data.json
+        if (accessToken && driveFolderId) {
+                    Swal.fire({
+            title: 'Generating QR Code...',
+            text: 'Please wait...',
+            icon: 'info',
+            showCancelButton: false,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+            try {
+                const newWifiRecord = {
+                    caption,
+                    qrURL: qrCodeUrl,
+                    ssid: ssid,
+                    password: password,
+                    encryption: encryption
+                };
+                await upsertJsonFile(driveFolderId, 'data.json', newWifiRecord);
+                await renderHistory();
+                Swal.close();
+                qrOutput.innerHTML = `<img class="img-fluid" style="max-width: 250px;" src="${qrCodeUrl}" alt="QR Code">`;
+        qrOutput.appendChild(downloadBtn);
+            } catch (err) {
+                console.error('Failed to save QR record:', err);
+                Swal.close();
+            }
+        }
+    }
+    else {
+        qrOutput.innerHTML = `<p style="color:red;">Failed to generate QR.</p>`;
+    }
+    
+}
 
 // ─────────────────────────────────────────────
 //  feedback alert
