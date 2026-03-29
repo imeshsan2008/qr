@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drive Link Converter with Preview</title>
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; line-height: 1.6; background: #f4f4f9; color: #333; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    input { width: 100%; padding: 14px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
+    input:focus { border-color: #3498db; outline: none; }
+    .result-box { margin-top: 25px; background: #f8fafb; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; }
+    h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    code { background: #e0e6ed; padding: 8px; border-radius: 4px; font-family: 'Courier New', monospace; display: block; margin-bottom: 15px; word-break: break-all; font-size: 0.9rem; border: 1px solid #d1d9e0; }
+    .preview-container { width: 100%; background: #eee; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+    iframe, img { width: 100%; border: none; display: none; }
+    iframe { min-height: 400px; }
+    img { max-height: 400px; object-fit: contain; background: white; }
+    .label { font-weight: bold; color: #555; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 Google Drive Link Generator</h2>
+    <p>Paste your "Anyone with the link" sharing URL below:</p>
+    
+    <input type="text" id="driveLink" placeholder="https://drive.google.com/file/d/1abc.../view?usp=sharing">
+
+    <div id="output" style="display:none;">
+        <div class="result-box">
+            <h3>🖼️ Image Direct Link</h3>
+            <span class="label">Best for &lt;img&gt; tags:</span>
+            <code id="imgLinkText"></code>
+            <div class="preview-container">
+                <img id="imgPreview" alt="Image Preview">
+            </div>
+        </div>
+
+        <div class="result-box">
+            <h3>📥 Direct Download / PDF</h3>
+            <span class="label">Forces download or direct browser render:</span>
+            <code id="pdfLinkText"></code>
+        </div>
+
+        <div class="result-box">
+            <h3>🖥️ Embed Viewer</h3>
+            <span class="label">Best for &lt;iframe&gt; previews:</span>
+            <code id="embedLinkText"></code>
+            <div class="preview-container">
+                <iframe id="embedPreview"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const inputField = document.getElementById('driveLink');
+const outputDiv = document.getElementById('output');
+
+inputField.addEventListener('input', () => {
+    const input = inputField.value.trim();
+    // Improved regex to handle various link formats
+    const regex = /\/d\/([a-zA-Z0-9_-]+)/;
+    const match = input.match(regex);
+
+    if (match && match[1]) {
+        const fileId = match[1];
+
+        // 1. Thumbnail/Image Link (high res)
+        const imgLink = `https://drive.google.com/thumbnail?id=${fileId}&sz=s1000`;
+        // 2. Direct Download Link (Note: Large files may trigger a virus scan warning page)
+        const downloadLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        // 3. Official Preview Link (Most reliable for iFrames)
+        const embedLink = `https://drive.google.com/file/d/${fileId}/preview`;
+
+        // Update Text
+        document.getElementById('imgLinkText').textContent = imgLink;
+        document.getElementById('pdfLinkText').textContent = downloadLink;
+        document.getElementById('embedLinkText').textContent = embedLink;
+
+        // Update Previews
+        const imgPreview = document.getElementById('imgPreview');
+        imgPreview.src = imgLink;
+        imgPreview.style.display = 'block';
+
+        const embedPreview = document.getElementById('embedPreview');
+        embedPreview.src = embedLink;
+        embedPreview.style.display = 'block';
+
+        outputDiv.style.display = 'block';
+    } else {
+        // Reset and hide if input is invalid or empty
+        outputDiv.style.display = 'none';
+        document.getElementById('imgPreview').src = "";
+        document.getElementById('embedPreview').src = "";
+    }
+});
+</script>
+
+</body>
+</html>
